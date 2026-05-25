@@ -102,6 +102,8 @@ export default function App() {
   const [loaded, setLoaded] = useState(false);
   const [dateKey] = useState(today());
   const [now, setNow] = useState(new Date());
+  const [userName, setUserName] = useState("");
+  const [nameInput, setNameInput] = useState("");
   const timer = useTimer();
 
   // Live clock
@@ -112,6 +114,8 @@ export default function App() {
 
   // Load from localStorage on mount
   useEffect(() => {
+    const storedName = localStorage.getItem("focusbase-name");
+    if (storedName) setUserName(storedName);
     const d = loadData();
     if (d) {
       if (d.date === today()) {
@@ -123,6 +127,13 @@ export default function App() {
     }
     setLoaded(true);
   }, []);
+
+  const submitName = () => {
+    const name = nameInput.trim();
+    if (!name) return;
+    localStorage.setItem("focusbase-name", name);
+    setUserName(name);
+  };
 
   // Save to localStorage on every state change
   useEffect(() => {
@@ -260,6 +271,10 @@ export default function App() {
           50%  { transform: scale(1.05); }
           100% { transform: scale(1);    }
         }
+        @keyframes modalIn {
+          from { opacity: 0; transform: translateY(16px) scale(0.97); }
+          to   { opacity: 1; transform: translateY(0)    scale(1);    }
+        }
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         input::placeholder { color: rgba(255,255,255,0.2) !important; }
@@ -280,6 +295,32 @@ export default function App() {
           color: #a78bfa !important;
         }
       `}</style>
+
+      {/* ── Name prompt modal ── */}
+      {loaded && !userName && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(9,9,11,0.85)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: "24px" }}>
+          <div style={{ background: `linear-gradient(135deg, #0f0f12, #16161c)`, border: `1px solid rgba(139,92,246,0.2)`, borderRadius: "20px", padding: "40px", width: "100%", maxWidth: "380px", boxShadow: "0 0 80px rgba(139,92,246,0.1)", animation: "modalIn 0.4s ease forwards" }}>
+            <div style={{ width: "40px", height: "40px", borderRadius: "12px", background: `linear-gradient(135deg, #8b5cf6, #6d28d9)`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "24px" }}>
+              <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" fill="white" /><path d="M8 2V4M8 12V14M2 8H4M12 8H14M3.8 3.8L5.2 5.2M10.8 10.8L12.2 12.2M3.8 12.2L5.2 10.8M10.8 5.2L12.2 3.8" stroke="white" strokeWidth="1.5" strokeLinecap="round" /></svg>
+            </div>
+            <h2 style={{ fontFamily: "'Outfit', sans-serif", fontSize: "22px", fontWeight: 700, letterSpacing: "-0.02em", marginBottom: "8px" }}>Welcome to FocusBase</h2>
+            <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.4)", marginBottom: "28px", lineHeight: 1.5 }}>Built for brains that work differently. What should we call you?</p>
+            <input
+              autoFocus
+              value={nameInput}
+              onChange={(e) => setNameInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && submitName()}
+              placeholder="Your first name"
+              style={{ width: "100%", background: "#09090b", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "10px", padding: "13px 16px", color: "#fafafa", fontSize: "15px", fontFamily: "'Plus Jakarta Sans', sans-serif", outline: "none", marginBottom: "12px", boxSizing: "border-box" }}
+              onFocus={(e) => (e.target.style.borderColor = "rgba(139,92,246,0.4)")}
+              onBlur={(e)  => (e.target.style.borderColor = "rgba(255,255,255,0.08)")}
+            />
+            <button onClick={submitName} style={{ width: "100%", padding: "13px", borderRadius: "10px", border: "none", background: `linear-gradient(135deg, #8b5cf6, #6d28d9)`, color: "#fff", fontFamily: "'Outfit', sans-serif", fontSize: "15px", fontWeight: 600, cursor: nameInput.trim() ? "pointer" : "default", opacity: nameInput.trim() ? 1 : 0.4, transition: "opacity 0.2s", boxShadow: "0 4px 20px rgba(139,92,246,0.25)" }}>
+              Let's go
+            </button>
+          </div>
+        </div>
+      )}
 
       <div style={{ minHeight: "100vh", background: c.bg0, color: c.text1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
         {/* Ambient background blobs */}
@@ -308,7 +349,7 @@ export default function App() {
           {/* ── Header ── */}
           <div style={{ marginBottom: "12px", padding: "0 4px" }}>
             <h1 style={{ fontFamily: "'Outfit', sans-serif", fontSize: "clamp(32px, 5vw, 44px)", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.1, background: `linear-gradient(135deg, ${c.text1} 0%, rgba(255,255,255,0.6) 100%)`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-              {greeting()}, Sami
+              {greeting()}{userName ? `, ${userName}` : ""}
             </h1>
             <p style={{ fontSize: "14px", color: c.text3, marginTop: "10px", fontStyle: "italic", letterSpacing: "0.01em" }}>
               &ldquo;{MOTD[new Date().getDate() % MOTD.length]}&rdquo;
